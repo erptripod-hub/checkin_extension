@@ -30,6 +30,45 @@ def get_projects():
 
 
 @frappe.whitelist()
+def get_open_checkin():
+    """Get current open check-in (IN without OUT) for today"""
+    emp = get_employee_info()
+    today = nowdate()
+    
+    # Find last IN that doesn't have a matching OUT
+    last_in = frappe.db.sql("""
+        SELECT ec.name, ec.project, ec.time, ec.gps_link, p.project_name
+        FROM `tabEmployee Checkin` ec
+        LEFT JOIN `tabProject` p ON p.name = ec.project
+        WHERE ec.employee = %s
+        AND ec.log_type = 'IN'
+        AND DATE(ec.time) = %s
+        AND NOT EXISTS (
+            SELECT 1 FROM `tabEmployee Checkin` ec_out
+            WHERE ec_out.employee = ec.employee
+            AND ec_out.log_type = 'OUT'
+            AND ec_out.project = ec.project
+            AND ec_out.time > ec.time
+            AND DATE(ec_out.time) = %s
+        )
+        ORDER BY ec.time DESC
+        LIMIT 1
+    """, (emp.name, today, today), as_dict=True)
+    
+    if last_in:
+        return {
+            "has_open": True,
+            "checkin_name": last_in[0].name,
+            "project": last_in[0].project,
+            "project_name": last_in[0].project_name,
+            "check_in_time": last_in[0].time,
+            "gps_link": last_in[0].gps_link
+        }
+    
+    return {"has_open": False}
+
+
+@frappe.whitelist()
 def get_today_entries():
     """Get today's check-in entries for current employee"""
     emp = get_employee_info()
@@ -67,7 +106,7 @@ def create_checkin(log_type, project, latitude=None, longitude=None, photo=None)
     if photo and photo.startswith("data:"):
         photo_url = save_photo(photo, emp.name, log_type)
     
-    # Create Employee Checkin (uses HRMS existing fields + our custom fields)
+    # Create Employee Checkin
     checkin = frappe.get_doc({
         "doctype": "Employee Checkin",
         "employee": emp.name,
@@ -102,42 +141,3 @@ def save_photo(base64_data, employee, prefix):
     except Exception as e:
         frappe.log_error(str(e), "Photo Save Error")
         return None
-
-
-@frappe.whitelist()
-def get_project_hours_report(from_date=None, to_date=None, employee=None):
-    """Get hours worked by project"""
-    filters = {}
-    if from_date:
-        filters["time"] = [">=", from_date]
-    if to_date:
-        if "time" in filters:
-            filters["time"] = ["between", [from_date, to_date + " 23:59:59"]]
-        else:
-            filters["time"] = ["<=", to_date + " 23:59:59"]
-    if employee:
-        filters["employee"] = employee
-    
-    checkins = frappe.get_all("Employee Checkin",
-        filters=filters,
-        fields=["employee", "log_type", "time", "project"],
-        order_by="employee, time"
-    )
-    
-    results = {}
-    current_in = {}
-    
-    for c in checkins:
-        key = (c.employee, c.project or "No Project")
-        
-        if c.log_type == "IN":
-            current_in[c.employee] = {"time": c.time, "project": c.project}
-        elif c.log_type == "OUT" and c.employee in current_in:
-            in_data = current_in.pop(c.employee)
-            if in_data["project"] == c.project:
-                hours = (c.time - in_data["time"]).total_seconds() / 3600
-                if key not in results:
-                    results[key] = {"employee": c.employee, "project": c.project or "No Project", "hours": 0}
-                results[key]["hours"] += hours
-    
-    return list(results.values())

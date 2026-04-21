@@ -3,197 +3,424 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#10B981">
+  <meta name="theme-color" content="#4F46E5">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Project Check In</title>
+  <link rel="manifest" href="/assets/checkin_extension/manifest.json">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
-      --primary: #10B981; --primary-dark: #059669;
-      --danger: #EF4444; --danger-dark: #DC2626;
-      --gray-50: #F9FAFB; --gray-100: #F3F4F6; --gray-200: #E5E7EB;
-      --gray-400: #9CA3AF; --gray-500: #6B7280; --gray-700: #374151; --gray-900: #111827;
+      --primary: #4F46E5;
+      --success: #10B981;
+      --danger: #EF4444;
+      --warning: #F59E0B;
+      --gray-50: #F9FAFB;
+      --gray-100: #F3F4F6;
+      --gray-200: #E5E7EB;
+      --gray-400: #9CA3AF;
+      --gray-500: #6B7280;
+      --gray-700: #374151;
+      --gray-900: #111827;
     }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--gray-50); min-height: 100vh; }
-    .container { max-width: 480px; margin: 0 auto; min-height: 100vh; background: #fff; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 400px;
+      min-height: 100vh;
+      background: #fff;
+    }
     
-    .header { background: var(--primary); color: #fff; padding: 16px 20px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 100; }
-    .back-btn { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 4px; }
-    .header h1 { font-size: 18px; font-weight: 600; flex: 1; }
+    /* Login Screen */
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: flex; flex-direction: column; }
     
-    .content { padding: 20px; }
+    .login-screen {
+      justify-content: center;
+      padding: 40px 24px;
+      background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+    }
+    .login-logo { text-align: center; margin-bottom: 40px; }
+    .login-logo-icon { font-size: 72px; margin-bottom: 16px; }
+    .login-logo h1 { color: #fff; font-size: 28px; font-weight: 700; }
+    .login-logo p { color: rgba(255,255,255,0.8); margin-top: 8px; }
+    .login-card { background: #fff; border-radius: 20px; padding: 32px 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+    .login-input {
+      width: 100%;
+      padding: 16px;
+      font-size: 16px;
+      border: 2px solid var(--gray-200);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+    .login-input:focus { outline: none; border-color: var(--primary); }
+    .login-btn {
+      width: 100%;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      background: var(--primary);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
     
-    .log-type-selector { display: flex; gap: 12px; margin-bottom: 24px; }
-    .log-type-btn { flex: 1; padding: 16px; border: 2px solid var(--gray-200); border-radius: 12px; background: #fff; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; transition: all 0.2s; }
-    .log-type-btn.active { border-color: var(--primary); background: #ECFDF5; color: var(--primary); }
-    .log-type-btn.out.active { border-color: var(--danger); background: #FEF2F2; color: var(--danger); }
-    .log-type-btn span:first-child { font-size: 28px; }
+    /* Main Screen */
+    .main-screen { background: var(--gray-50); }
+    .header {
+      background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+      color: #fff;
+      padding: 24px 20px;
+      text-align: center;
+    }
+    .header-greeting { font-size: 14px; opacity: 0.9; }
+    .header-name { font-size: 24px; font-weight: 700; margin-top: 4px; }
+    .header-date { font-size: 13px; opacity: 0.8; margin-top: 8px; }
     
+    .content { padding: 20px; flex: 1; }
+    
+    /* Status Card */
+    .status-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .status-card.working {
+      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+      color: #fff;
+    }
+    .status-label { font-size: 14px; opacity: 0.8; margin-bottom: 8px; }
+    .status-project { font-size: 22px; font-weight: 700; }
+    .status-time { font-size: 14px; margin-top: 12px; display: flex; align-items: center; gap: 8px; }
+    .status-time-icon { font-size: 18px; }
+    
+    /* Form */
     .form-group { margin-bottom: 20px; }
-    .form-label { display: block; font-size: 14px; font-weight: 600; color: var(--gray-700); margin-bottom: 8px; }
-    .form-select { width: 100%; padding: 14px 16px; font-size: 16px; border: 2px solid var(--gray-200); border-radius: 12px; background: #fff; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+    .form-label { display: block; font-size: 14px; font-weight: 600; color: var(--gray-700); margin-bottom: 10px; }
+    .form-select {
+      width: 100%;
+      padding: 16px;
+      font-size: 16px;
+      border: 2px solid var(--gray-200);
+      border-radius: 12px;
+      background: #fff;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+    }
     .form-select:focus { outline: none; border-color: var(--primary); }
     
-    .info-box { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px; margin-bottom: 16px; }
-    .info-box.location { background: var(--gray-100); border: 2px solid var(--gray-200); }
-    .info-box.location.success { background: #ECFDF5; border-color: var(--primary); }
-    .info-box .icon { font-size: 24px; }
-    .info-box .text { flex: 1; }
-    .info-box .label { font-size: 12px; color: var(--gray-500); }
-    .info-box .value { font-size: 14px; font-weight: 500; color: var(--gray-900); }
-    .info-box .action { font-size: 14px; color: var(--primary); font-weight: 500; cursor: pointer; }
+    /* Location Box */
+    .location-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: #fff;
+      border: 2px solid var(--gray-200);
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+    .location-box.success { background: #ECFDF5; border-color: var(--success); }
+    .location-box .icon { font-size: 24px; }
+    .location-box .info { flex: 1; }
+    .location-box .label { font-size: 12px; color: var(--gray-500); }
+    .location-box .value { font-size: 14px; font-weight: 500; color: var(--gray-900); }
     
-    .camera-section { margin-bottom: 20px; }
-    .camera-box { background: #1a1a1a; border-radius: 16px; aspect-ratio: 4/3; position: relative; overflow: hidden; }
+    /* Camera */
+    .camera-section { margin-bottom: 24px; }
+    .camera-box {
+      background: #1a1a1a;
+      border-radius: 16px;
+      aspect-ratio: 4/3;
+      overflow: hidden;
+      position: relative;
+    }
     .camera-box video, .camera-box img { width: 100%; height: 100%; object-fit: cover; }
-    .camera-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--gray-400); }
+    .camera-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray-400);
+    }
     .camera-placeholder span:first-child { font-size: 48px; margin-bottom: 8px; }
     .camera-controls { display: flex; justify-content: center; gap: 12px; margin-top: 12px; }
-    .cam-btn { padding: 12px 20px; border-radius: 24px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .cam-btn {
+      padding: 12px 20px;
+      border-radius: 24px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
     .cam-btn.primary { background: var(--primary); color: #fff; }
     .cam-btn.secondary { background: var(--gray-200); color: var(--gray-700); }
     
-    .submit-btn { width: 100%; padding: 18px; font-size: 18px; font-weight: 600; border: none; border-radius: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 24px; }
-    .submit-btn.in { background: var(--primary); color: #fff; }
-    .submit-btn.out { background: var(--danger); color: #fff; }
-    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    /* Action Button */
+    .action-btn {
+      width: 100%;
+      padding: 20px;
+      font-size: 20px;
+      font-weight: 700;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .action-btn:active { transform: scale(0.98); }
+    .action-btn.checkin {
+      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+    }
+    .action-btn.checkout {
+      background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+    }
     
-    .toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: var(--gray-900); color: #fff; padding: 14px 24px; border-radius: 12px; font-size: 14px; font-weight: 500; opacity: 0; transition: opacity 0.3s; z-index: 1000; }
-    .toast.show { opacity: 1; }
-    .toast.success { background: var(--primary); }
+    /* Today's Log */
+    .log-section { margin-top: 24px; }
+    .log-title { font-size: 14px; font-weight: 600; color: var(--gray-500); margin-bottom: 12px; text-transform: uppercase; }
+    .log-entry {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      background: #fff;
+      border-radius: 12px;
+      margin-bottom: 8px;
+    }
+    .log-entry-icon { font-size: 24px; }
+    .log-entry-icon.in { color: var(--success); }
+    .log-entry-icon.out { color: var(--danger); }
+    .log-entry-info { flex: 1; }
+    .log-entry-project { font-weight: 600; color: var(--gray-900); }
+    .log-entry-time { font-size: 13px; color: var(--gray-500); }
+    
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--gray-900);
+      color: #fff;
+      padding: 16px 28px;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .toast.success { background: var(--success); }
     .toast.error { background: var(--danger); }
     
-    .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.9); display: none; align-items: center; justify-content: center; z-index: 2000; }
+    /* Loading */
+    .loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.95);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      z-index: 2000;
+    }
     .loading.show { display: flex; }
-    .spinner { width: 48px; height: 48px; border: 4px solid var(--gray-200); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid var(--gray-200);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .loading-text { color: var(--gray-600); font-weight: 500; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    
-    .login-screen { display: flex; flex-direction: column; justify-content: center; padding: 40px 24px; min-height: 100vh; }
-    .logo { text-align: center; margin-bottom: 40px; }
-    .logo-icon { font-size: 64px; margin-bottom: 12px; }
-    .logo h2 { font-size: 24px; color: var(--gray-900); margin-bottom: 8px; }
-    .logo p { color: var(--gray-500); }
-    .login-input { width: 100%; padding: 14px 16px; font-size: 16px; border: 2px solid var(--gray-200); border-radius: 12px; margin-bottom: 12px; }
-    .login-input:focus { outline: none; border-color: var(--primary); }
-    .login-btn { width: 100%; padding: 16px; font-size: 16px; font-weight: 600; background: var(--primary); color: #fff; border: none; border-radius: 12px; cursor: pointer; }
   </style>
 </head>
 <body>
   <div class="container">
+    
     <!-- Login Screen -->
-    <div id="login-screen" class="login-screen">
-      <div class="logo">
-        <div class="logo-icon">📍</div>
-        <h2>Project Check In</h2>
-        <p>Login with your ERPNext account</p>
+    <div id="login-screen" class="screen login-screen active">
+      <div class="login-logo">
+        <div class="login-logo-icon">📍</div>
+        <h1>Project Check In</h1>
+        <p>Track your work hours by project</p>
       </div>
-      <form id="login-form">
-        <input type="email" id="login-email" class="login-input" placeholder="Email" required>
-        <input type="password" id="login-password" class="login-input" placeholder="Password" required>
-        <button type="submit" class="login-btn">Login</button>
-      </form>
+      <div class="login-card">
+        <form id="login-form">
+          <input type="email" id="login-email" class="login-input" placeholder="Email" required>
+          <input type="password" id="login-password" class="login-input" placeholder="Password" required>
+          <button type="submit" class="login-btn">Login</button>
+        </form>
+      </div>
     </div>
     
     <!-- Main Screen -->
-    <div id="main-screen" style="display: none;">
+    <div id="main-screen" class="screen main-screen">
       <div class="header">
-        <button class="back-btn" onclick="window.location.href='/hrms'">←</button>
-        <h1>Project Check In</h1>
+        <div class="header-greeting">Welcome back</div>
+        <div class="header-name" id="emp-name">Employee</div>
+        <div class="header-date" id="today-date"></div>
       </div>
       
       <div class="content">
-        <!-- Log Type Selection -->
-        <div class="log-type-selector">
-          <button class="log-type-btn active" data-type="IN" onclick="App.setLogType('IN')">
-            <span>📥</span>
-            <span>Check In</span>
-          </button>
-          <button class="log-type-btn out" data-type="OUT" onclick="App.setLogType('OUT')">
-            <span>📤</span>
-            <span>Check Out</span>
-          </button>
-        </div>
         
-        <!-- Project Selection -->
-        <div class="form-group">
-          <label class="form-label">Project *</label>
-          <select id="project-select" class="form-select" required>
-            <option value="">Select a project...</option>
-          </select>
-        </div>
-        
-        <!-- Location -->
-        <div class="info-box location" id="location-box">
-          <span class="icon">📍</span>
-          <div class="text">
-            <div class="label">Location</div>
-            <div class="value" id="location-value">Detecting...</div>
+        <!-- CHECK IN MODE -->
+        <div id="checkin-mode">
+          <div class="form-group">
+            <label class="form-label">Select Project</label>
+            <select id="project-select" class="form-select">
+              <option value="">-- Select Project --</option>
+            </select>
           </div>
-          <span class="action" onclick="App.getLocation()">Refresh</span>
-        </div>
-        
-        <!-- Camera -->
-        <div class="camera-section">
-          <label class="form-label">Photo</label>
-          <div class="camera-box" id="camera-box">
-            <video id="camera-video" autoplay playsinline style="display: none;"></video>
-            <img id="camera-img" style="display: none;">
-            <div class="camera-placeholder" id="camera-placeholder">
-              <span>📷</span>
-              <span>Tap to start camera</span>
+          
+          <div class="location-box" id="location-box">
+            <span class="icon">📍</span>
+            <div class="info">
+              <div class="label">Location</div>
+              <div class="value" id="location-value">Detecting...</div>
             </div>
           </div>
-          <div class="camera-controls">
-            <button class="cam-btn secondary" id="switch-btn" onclick="App.switchCamera()" style="display: none;">🔄 Flip</button>
-            <button class="cam-btn primary" id="start-btn" onclick="App.startCamera()">📷 Start Camera</button>
-            <button class="cam-btn primary" id="capture-btn" onclick="App.capturePhoto()" style="display: none;">📸 Capture</button>
-            <button class="cam-btn secondary" id="retake-btn" onclick="App.retakePhoto()" style="display: none;">↩️ Retake</button>
+          
+          <div class="camera-section">
+            <label class="form-label">Photo</label>
+            <div class="camera-box">
+              <video id="camera-video" autoplay playsinline style="display:none;"></video>
+              <img id="camera-img" style="display:none;">
+              <div class="camera-placeholder" id="camera-placeholder">
+                <span>📷</span>
+                <span>Tap to open camera</span>
+              </div>
+            </div>
+            <div class="camera-controls">
+              <button class="cam-btn secondary" id="switch-btn" onclick="App.switchCamera()" style="display:none;">🔄 Flip</button>
+              <button class="cam-btn primary" id="start-btn" onclick="App.startCamera()">📷 Open Camera</button>
+              <button class="cam-btn primary" id="capture-btn" onclick="App.capturePhoto()" style="display:none;">📸 Capture</button>
+              <button class="cam-btn secondary" id="retake-btn" onclick="App.retakePhoto()" style="display:none;">↩️ Retake</button>
+            </div>
           </div>
+          
+          <button class="action-btn checkin" onclick="App.doCheckIn()">
+            <span>▶</span> CHECK IN
+          </button>
         </div>
         
-        <!-- Submit Button -->
-        <button class="submit-btn in" id="submit-btn" onclick="App.submit()">
-          ✓ Confirm Check In
-        </button>
+        <!-- CHECK OUT MODE -->
+        <div id="checkout-mode" style="display:none;">
+          <div class="status-card working">
+            <div class="status-label">Currently working on</div>
+            <div class="status-project" id="working-project">Project Name</div>
+            <div class="status-time">
+              <span class="status-time-icon">🕐</span>
+              <span>Since <strong id="working-since">10:30 AM</strong></span>
+            </div>
+          </div>
+          
+          <div class="location-box" id="location-box-out">
+            <span class="icon">📍</span>
+            <div class="info">
+              <div class="label">Location</div>
+              <div class="value" id="location-value-out">Detecting...</div>
+            </div>
+          </div>
+          
+          <div class="camera-section">
+            <label class="form-label">Photo</label>
+            <div class="camera-box">
+              <video id="camera-video-out" autoplay playsinline style="display:none;"></video>
+              <img id="camera-img-out" style="display:none;">
+              <div class="camera-placeholder" id="camera-placeholder-out">
+                <span>📷</span>
+                <span>Tap to open camera</span>
+              </div>
+            </div>
+            <div class="camera-controls">
+              <button class="cam-btn secondary" id="switch-btn-out" onclick="App.switchCamera('out')" style="display:none;">🔄 Flip</button>
+              <button class="cam-btn primary" id="start-btn-out" onclick="App.startCamera('out')">📷 Open Camera</button>
+              <button class="cam-btn primary" id="capture-btn-out" onclick="App.capturePhoto('out')" style="display:none;">📸 Capture</button>
+              <button class="cam-btn secondary" id="retake-btn-out" onclick="App.retakePhoto('out')" style="display:none;">↩️ Retake</button>
+            </div>
+          </div>
+          
+          <button class="action-btn checkout" onclick="App.doCheckOut()">
+            <span>◼</span> CHECK OUT
+          </button>
+        </div>
+        
+        <!-- Today's Log -->
+        <div class="log-section">
+          <div class="log-title">Today's Activity</div>
+          <div id="log-entries"></div>
+        </div>
+        
       </div>
     </div>
+    
   </div>
   
   <div class="toast" id="toast"></div>
-  <div class="loading" id="loading"><div class="spinner"></div></div>
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Please wait...</div>
+  </div>
   
   <script>
     const App = {
-      logType: 'IN',
+      employee: null,
+      openCheckin: null,
       location: null,
+      locationOut: null,
       photo: null,
+      photoOut: null,
       stream: null,
       facingMode: 'environment',
       
       init() {
         document.getElementById('login-form').onsubmit = (e) => { e.preventDefault(); this.login(); };
+        document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-US', {
+          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
         this.checkSession();
       },
       
-      async checkSession() {
-        try {
-          const emp = await this.api('checkin_extension.api.get_employee_info');
-          if (emp) {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('main-screen').style.display = 'block';
-            this.loadProjects();
-            this.getLocation();
-          }
-        } catch (e) {
-          document.getElementById('login-screen').style.display = 'flex';
-          document.getElementById('main-screen').style.display = 'none';
-        }
+      showScreen(screen) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screen + '-screen').classList.add('active');
       },
       
       async login() {
         this.loading(true);
         try {
-          await fetch('/api/method/login', {
+          const res = await fetch('/api/method/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -201,37 +428,101 @@
               pwd: document.getElementById('login-password').value
             })
           });
+          if (!res.ok) throw new Error('Login failed');
           await this.checkSession();
         } catch (e) {
-          this.toast('Login failed', 'error');
+          this.toast('Invalid email or password', 'error');
         }
         this.loading(false);
       },
       
-      setLogType(type) {
-        this.logType = type;
-        document.querySelectorAll('.log-type-btn').forEach(b => {
-          b.classList.toggle('active', b.dataset.type === type);
-        });
-        const btn = document.getElementById('submit-btn');
-        btn.className = 'submit-btn ' + type.toLowerCase();
-        btn.innerHTML = type === 'IN' ? '✓ Confirm Check In' : '✓ Confirm Check Out';
+      async checkSession() {
+        try {
+          const emp = await this.api('checkin_extension.api.get_employee_info');
+          if (emp) {
+            this.employee = emp;
+            document.getElementById('emp-name').textContent = emp.employee_name;
+            this.showScreen('main');
+            await this.loadStatus();
+          }
+        } catch (e) {
+          this.showScreen('login');
+        }
+      },
+      
+      async loadStatus() {
+        try {
+          // Check if there's an open check-in
+          const status = await this.api('checkin_extension.api.get_open_checkin');
+          this.openCheckin = status;
+          
+          if (status.has_open) {
+            // Show checkout mode
+            document.getElementById('checkin-mode').style.display = 'none';
+            document.getElementById('checkout-mode').style.display = 'block';
+            document.getElementById('working-project').textContent = status.project_name || status.project;
+            const checkInTime = new Date(status.check_in_time);
+            document.getElementById('working-since').textContent = checkInTime.toLocaleTimeString('en-US', {
+              hour: '2-digit', minute: '2-digit'
+            });
+            this.getLocation('out');
+          } else {
+            // Show checkin mode
+            document.getElementById('checkin-mode').style.display = 'block';
+            document.getElementById('checkout-mode').style.display = 'none';
+            await this.loadProjects();
+            this.getLocation();
+          }
+          
+          await this.loadTodayLog();
+        } catch (e) {
+          console.error(e);
+        }
       },
       
       async loadProjects() {
         try {
           const projects = await this.api('checkin_extension.api.get_projects');
           const sel = document.getElementById('project-select');
-          sel.innerHTML = '<option value="">Select a project...</option>' +
+          sel.innerHTML = '<option value="">-- Select Project --</option>' +
             projects.map(p => `<option value="${p.name}">${p.project_name || p.name}</option>`).join('');
         } catch (e) {
-          console.log(e);
+          console.error(e);
         }
       },
       
-      async getLocation() {
-        const el = document.getElementById('location-value');
-        const box = document.getElementById('location-box');
+      async loadTodayLog() {
+        try {
+          const entries = await this.api('checkin_extension.api.get_today_entries');
+          const el = document.getElementById('log-entries');
+          
+          if (!entries || !entries.length) {
+            el.innerHTML = '<div style="text-align:center; color: #9CA3AF; padding: 20px;">No activity yet today</div>';
+            return;
+          }
+          
+          el.innerHTML = entries.map(e => {
+            const time = new Date(e.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            const isIn = e.log_type === 'IN';
+            return `
+              <div class="log-entry">
+                <span class="log-entry-icon ${isIn ? 'in' : 'out'}">${isIn ? '▶' : '◼'}</span>
+                <div class="log-entry-info">
+                  <div class="log-entry-project">${e.project_name || e.project || 'No Project'}</div>
+                  <div class="log-entry-time">${e.log_type} at ${time}</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } catch (e) {
+          console.error(e);
+        }
+      },
+      
+      async getLocation(mode = '') {
+        const suffix = mode ? '-out' : '';
+        const el = document.getElementById('location-value' + suffix);
+        const box = document.getElementById('location-box' + suffix);
         el.textContent = 'Detecting...';
         box.classList.remove('success');
         
@@ -244,27 +535,33 @@
           const pos = await new Promise((res, rej) => 
             navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 15000 })
           );
-          this.location = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
-          el.textContent = `${this.location.latitude.toFixed(6)}, ${this.location.longitude.toFixed(6)}`;
+          const loc = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+          if (mode === 'out') {
+            this.locationOut = loc;
+          } else {
+            this.location = loc;
+          }
+          el.textContent = `${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}`;
           box.classList.add('success');
         } catch (e) {
-          el.textContent = 'Unable to detect';
-          this.location = null;
+          el.textContent = 'Could not detect';
         }
       },
       
-      async startCamera() {
+      async startCamera(mode = '') {
+        const suffix = mode ? '-out' : '';
         try {
+          if (this.stream) this.stopCamera();
           this.stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: this.facingMode, width: { ideal: 1280 }, height: { ideal: 720 } }
           });
-          const video = document.getElementById('camera-video');
+          const video = document.getElementById('camera-video' + suffix);
           video.srcObject = this.stream;
           video.style.display = 'block';
-          document.getElementById('camera-placeholder').style.display = 'none';
-          document.getElementById('start-btn').style.display = 'none';
-          document.getElementById('capture-btn').style.display = 'inline-flex';
-          document.getElementById('switch-btn').style.display = 'inline-flex';
+          document.getElementById('camera-placeholder' + suffix).style.display = 'none';
+          document.getElementById('start-btn' + suffix).style.display = 'none';
+          document.getElementById('capture-btn' + suffix).style.display = 'inline-flex';
+          document.getElementById('switch-btn' + suffix).style.display = 'inline-flex';
         } catch (e) {
           this.toast('Camera access denied', 'error');
         }
@@ -277,37 +574,50 @@
         }
       },
       
-      switchCamera() {
+      switchCamera(mode = '') {
         this.facingMode = this.facingMode === 'environment' ? 'user' : 'environment';
         this.stopCamera();
-        this.startCamera();
+        this.startCamera(mode);
       },
       
-      capturePhoto() {
-        const video = document.getElementById('camera-video');
-        const img = document.getElementById('camera-img');
+      capturePhoto(mode = '') {
+        const suffix = mode ? '-out' : '';
+        const video = document.getElementById('camera-video' + suffix);
+        const img = document.getElementById('camera-img' + suffix);
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         canvas.getContext('2d').drawImage(video, 0, 0);
-        this.photo = canvas.toDataURL('image/jpeg', 0.8);
-        img.src = this.photo;
+        const photoData = canvas.toDataURL('image/jpeg', 0.8);
+        
+        if (mode === 'out') {
+          this.photoOut = photoData;
+        } else {
+          this.photo = photoData;
+        }
+        
+        img.src = photoData;
         img.style.display = 'block';
         video.style.display = 'none';
-        document.getElementById('capture-btn').style.display = 'none';
-        document.getElementById('switch-btn').style.display = 'none';
-        document.getElementById('retake-btn').style.display = 'inline-flex';
+        document.getElementById('capture-btn' + suffix).style.display = 'none';
+        document.getElementById('switch-btn' + suffix).style.display = 'none';
+        document.getElementById('retake-btn' + suffix).style.display = 'inline-flex';
         this.stopCamera();
       },
       
-      retakePhoto() {
-        this.photo = null;
-        document.getElementById('camera-img').style.display = 'none';
-        document.getElementById('retake-btn').style.display = 'none';
-        this.startCamera();
+      retakePhoto(mode = '') {
+        const suffix = mode ? '-out' : '';
+        if (mode === 'out') {
+          this.photoOut = null;
+        } else {
+          this.photo = null;
+        }
+        document.getElementById('camera-img' + suffix).style.display = 'none';
+        document.getElementById('retake-btn' + suffix).style.display = 'none';
+        this.startCamera(mode);
       },
       
-      async submit() {
+      async doCheckIn() {
         const project = document.getElementById('project-select').value;
         if (!project) {
           this.toast('Please select a project', 'error');
@@ -317,16 +627,43 @@
         this.loading(true);
         try {
           await this.api('checkin_extension.api.create_checkin', {
-            log_type: this.logType,
+            log_type: 'IN',
             project: project,
             latitude: this.location?.latitude,
             longitude: this.location?.longitude,
             photo: this.photo
           });
-          this.toast(this.logType === 'IN' ? 'Checked in!' : 'Checked out!', 'success');
-          setTimeout(() => window.location.href = '/hrms', 1500);
+          this.toast('Checked in successfully!', 'success');
+          this.photo = null;
+          this.stopCamera();
+          await this.loadStatus();
         } catch (e) {
-          this.toast('Failed: ' + (e.message || 'Unknown error'), 'error');
+          this.toast('Check-in failed', 'error');
+        }
+        this.loading(false);
+      },
+      
+      async doCheckOut() {
+        if (!this.openCheckin?.project) {
+          this.toast('No active check-in', 'error');
+          return;
+        }
+        
+        this.loading(true);
+        try {
+          await this.api('checkin_extension.api.create_checkin', {
+            log_type: 'OUT',
+            project: this.openCheckin.project,
+            latitude: this.locationOut?.latitude,
+            longitude: this.locationOut?.longitude,
+            photo: this.photoOut
+          });
+          this.toast('Checked out successfully!', 'success');
+          this.photoOut = null;
+          this.stopCamera();
+          await this.loadStatus();
+        } catch (e) {
+          this.toast('Check-out failed', 'error');
         }
         this.loading(false);
       },
@@ -338,7 +675,7 @@
           body: JSON.stringify(args)
         });
         const data = await res.json();
-        if (data.exc) throw new Error(JSON.parse(data._server_messages || '[]')[0] || 'Error');
+        if (data.exc) throw new Error('API Error');
         return data.message;
       },
       
