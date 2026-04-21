@@ -40,7 +40,7 @@ def get_today_entries():
             "employee": emp.name,
             "time": ["between", [f"{today} 00:00:00", f"{today} 23:59:59"]]
         },
-        fields=["name", "log_type", "time", "project", "gps_location", "checkin_photo", "latitude", "longitude"],
+        fields=["name", "log_type", "time", "project", "gps_link", "checkin_photo", "latitude", "longitude"],
         order_by="time desc"
     )
     
@@ -58,16 +58,16 @@ def create_checkin(log_type, project, latitude=None, longitude=None, photo=None)
     emp = get_employee_info()
     
     # Build Google Maps URL
-    gps_location = ""
+    gps_link = ""
     if latitude and longitude:
-        gps_location = f"https://www.google.com/maps?q={latitude},{longitude}"
+        gps_link = f"https://www.google.com/maps?q={latitude},{longitude}"
     
     # Save photo
     photo_url = None
     if photo and photo.startswith("data:"):
         photo_url = save_photo(photo, emp.name, log_type)
     
-    # Create Employee Checkin
+    # Create Employee Checkin (uses HRMS existing fields + our custom fields)
     checkin = frappe.get_doc({
         "doctype": "Employee Checkin",
         "employee": emp.name,
@@ -76,7 +76,7 @@ def create_checkin(log_type, project, latitude=None, longitude=None, photo=None)
         "project": project,
         "latitude": float(latitude) if latitude else None,
         "longitude": float(longitude) if longitude else None,
-        "gps_location": gps_location,
+        "gps_link": gps_link,
         "checkin_photo": photo_url
     })
     checkin.insert(ignore_permissions=True)
@@ -118,14 +118,12 @@ def get_project_hours_report(from_date=None, to_date=None, employee=None):
     if employee:
         filters["employee"] = employee
     
-    # Get all checkins
     checkins = frappe.get_all("Employee Checkin",
         filters=filters,
         fields=["employee", "log_type", "time", "project"],
         order_by="employee, time"
     )
     
-    # Calculate hours per project per employee
     results = {}
     current_in = {}
     
