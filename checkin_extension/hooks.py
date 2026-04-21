@@ -16,15 +16,15 @@ fixtures = [
     }
 ]
 
-# Include JS in Employee Checkin form
+# Include JS in Employee Checkin form (for ERPNext desktop)
 doctype_js = {
     "Employee Checkin": "public/js/employee_checkin.js"
 }
 
-# Website Route Rules for mobile check-in page
+# Include JS on web pages (this injects into HRMS mobile)
+web_include_js = "/assets/checkin_extension/js/hrms_inject.js"
+
+# Website Route Rules
 website_route_rules = [
     {"from_route": "/project-checkin", "to_route": "project-checkin"},
 ]
-
-# Home Pages
-home_page = "project-checkin"
