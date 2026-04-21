@@ -1,6 +1,14 @@
 frappe.query_reports["Project Hours Report"] = {
     filters: [
         {
+            fieldname: "report_type",
+            label: __("Report Type"),
+            fieldtype: "Select",
+            options: "Detailed\nWeekly Summary\nMonthly Summary",
+            default: "Detailed",
+            reqd: 1
+        },
+        {
             fieldname: "from_date",
             label: __("From Date"),
             fieldtype: "Date",
@@ -30,8 +38,8 @@ frappe.query_reports["Project Hours Report"] = {
     formatter: function(value, row, column, data, default_formatter) {
         value = default_formatter(value, row, column, data);
         
-        if (column.fieldname === "hours" && data.hours > 8) {
-            value = `<span style="color: green; font-weight: bold;">${data.hours}</span>`;
+        if (column.fieldname === "total_hours" && data && data.total_hours > 40) {
+            value = `<span style="color: green; font-weight: bold;">${value}</span>`;
         }
         
         return value;
