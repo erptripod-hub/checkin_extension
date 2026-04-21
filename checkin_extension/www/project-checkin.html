@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#E11D48">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Project Check-in</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #E11D48; --primary-dark: #BE123C;
+      --success: #10B981; --danger: #EF4444;
+      --gray-50: #F9FAFB; --gray-100: #F3F4F6; --gray-200: #E5E7EB;
+      --gray-500: #6B7280; --gray-700: #374151; --gray-900: #111827;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--gray-100); min-height: 100vh; }
+    .app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: #fff; }
+    
+    /* Login Screen */
+    .login-screen { display: flex; flex-direction: column; justify-content: center; padding: 40px 24px; min-height: 100vh; }
+    .logo { text-align: center; margin-bottom: 40px; }
+    .logo-icon { font-size: 64px; margin-bottom: 16px; }
+    .logo h1 { font-size: 24px; font-weight: 700; color: var(--gray-900); }
+    .logo p { color: var(--gray-500); margin-top: 8px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; color: var(--gray-700); }
+    .form-group input, .form-group select { width: 100%; padding: 14px 16px; font-size: 16px; border: 2px solid var(--gray-200); border-radius: 12px; }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary); }
+    .btn { display: block; width: 100%; padding: 16px; font-size: 16px; font-weight: 600; border: none; border-radius: 12px; cursor: pointer; text-align: center; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    
+    /* Main Screen */
+    .main-screen { display: none; }
+    .header { background: var(--primary); color: #fff; padding: 20px; }
+    .header h1 { font-size: 20px; font-weight: 600; }
+    .header p { font-size: 14px; opacity: 0.9; margin-top: 4px; }
+    .content { padding: 20px; }
+    
+    /* Today's Entries */
+    .section-title { font-size: 14px; font-weight: 600; color: var(--gray-500); margin-bottom: 12px; text-transform: uppercase; }
+    .entry-card { background: var(--gray-50); border-radius: 12px; padding: 16px; margin-bottom: 12px; border-left: 4px solid var(--primary); }
+    .entry-card.checked-out { border-left-color: var(--success); }
+    .entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .entry-project { font-weight: 600; font-size: 16px; }
+    .entry-badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .entry-badge.in { background: var(--primary); color: #fff; }
+    .entry-badge.out { background: var(--success); color: #fff; }
+    .entry-time { font-size: 14px; color: var(--gray-500); }
+    .entry-location { font-size: 12px; color: var(--gray-500); margin-top: 8px; }
+    .entry-location a { color: var(--primary); text-decoration: none; }
+    .entry-photo { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; margin-top: 8px; }
+    
+    /* Check-in Form */
+    .checkin-form { display: none; }
+    .back-btn { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; margin-right: 16px; }
+    .location-box { display: flex; align-items: center; gap: 12px; background: var(--gray-50); border: 2px solid var(--gray-200); border-radius: 12px; padding: 14px; margin-bottom: 16px; }
+    .location-box.success { background: #D1FAE5; border-color: var(--success); }
+    .location-icon { font-size: 24px; }
+    .location-info { flex: 1; }
+    .location-label { font-size: 12px; color: var(--gray-500); }
+    .location-value { font-weight: 500; }
+    
+    /* Camera */
+    .camera-container { margin-bottom: 16px; }
+    .camera-box { background: #1a1a1a; border-radius: 12px; aspect-ratio: 4/3; position: relative; overflow: hidden; }
+    .camera-box video, .camera-box img { width: 100%; height: 100%; object-fit: cover; }
+    .camera-controls { display: flex; justify-content: center; gap: 16px; margin-top: 12px; }
+    .camera-btn { padding: 12px 24px; border-radius: 24px; border: none; font-weight: 600; cursor: pointer; }
+    .camera-btn.capture { background: var(--primary); color: #fff; }
+    .camera-btn.switch { background: var(--gray-200); color: var(--gray-700); }
+    .camera-btn.retake { background: var(--gray-200); color: var(--gray-700); }
+    
+    /* Empty state */
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--gray-500); }
+    .empty-state-icon { font-size: 48px; margin-bottom: 16px; }
+    
+    /* Toast */
+    .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: var(--gray-900); color: #fff; padding: 14px 24px; border-radius: 12px; font-size: 14px; opacity: 0; transition: opacity 0.3s; z-index: 1000; }
+    .toast.show { opacity: 1; }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+    
+    /* Loading */
+    .loading { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); display: none; align-items: center; justify-content: center; z-index: 2000; }
+    .loading.show { display: flex; }
+    .spinner { width: 48px; height: 48px; border: 4px solid var(--gray-200); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    /* Action buttons */
+    .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+    .action-btn { padding: 20px; border-radius: 16px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .action-btn.checkin { background: var(--success); color: #fff; }
+    .action-btn.checkout { background: var(--danger); color: #fff; }
+    .action-btn span:first-child { font-size: 32px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-screen">
+      <div class="logo">
+        <div class="logo-icon">⏱️</div>
+        <h1>Project Check-in</h1>
+        <p>Track your time by project</p>
+      </div>
+      <form id="login-form">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="login-email" required placeholder="your@email.com">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-password" required placeholder="Password">
+        </div>
+        <button type="submit" class="btn btn-primary">Login</button>
+      </form>
+    </div>
+    
+    <!-- Main Screen -->
+    <div id="main-screen" class="main-screen">
+      <div class="header">
+        <h1 id="greeting">Hello</h1>
+        <p id="today-date"></p>
+      </div>
+      <div class="content">
+        <div class="action-buttons">
+          <button class="action-btn checkin" onclick="App.showCheckinForm('IN')">
+            <span>📥</span>
+            <span>Check In</span>
+          </button>
+          <button class="action-btn checkout" onclick="App.showCheckinForm('OUT')">
+            <span>📤</span>
+            <span>Check Out</span>
+          </button>
+        </div>
+        
+        <div class="section-title">Today's Entries</div>
+        <div id="entries-list">
+          <div class="empty-state">
+            <div class="empty-state-icon">📋</div>
+            <p>No entries yet today</p>
+          </div>
+        </div>
+        
+        <button class="btn" style="margin-top: 20px; background: var(--gray-200); color: var(--gray-700);" onclick="App.logout()">Logout</button>
+      </div>
+    </div>
+    
+    <!-- Check-in Form -->
+    <div id="checkin-form" class="checkin-form">
+      <div class="header" style="display: flex; align-items: center;">
+        <button class="back-btn" onclick="App.showMain()">←</button>
+        <h1 id="form-title">Check In</h1>
+      </div>
+      <div class="content">
+        <div class="form-group">
+          <label>Select Project *</label>
+          <select id="project-select" required>
+            <option value="">-- Select Project --</option>
+          </select>
+        </div>
+        
+        <div class="location-box" id="location-box">
+          <span class="location-icon">📍</span>
+          <div class="location-info">
+            <div class="location-label">Current Location</div>
+            <div class="location-value" id="location-value">Detecting...</div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Take Photo</label>
+        </div>
+        <div class="camera-container">
+          <div class="camera-box">
+            <video id="camera-video" autoplay playsinline></video>
+            <img id="camera-img" style="display: none;">
+          </div>
+          <div class="camera-controls">
+            <button class="camera-btn switch" id="switch-btn" onclick="App.switchCamera()">🔄 Switch</button>
+            <button class="camera-btn capture" id="capture-btn" onclick="App.capturePhoto()">📷 Capture</button>
+            <button class="camera-btn retake" id="retake-btn" onclick="App.retakePhoto()" style="display: none;">↩️ Retake</button>
+          </div>
+        </div>
+        
+        <button class="btn btn-success" id="confirm-btn" onclick="App.confirmCheckin()">✓ Confirm</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="toast" id="toast"></div>
+  <div class="loading" id="loading"><div class="spinner"></div></div>
+  
+  <script>
+    const App = {
+      employee: null,
+      location: null,
+      photo: null,
+      stream: null,
+      logType: 'IN',
+      facingMode: 'environment', // Start with back camera
+      
+      init() {
+        document.getElementById('login-form').onsubmit = (e) => {
+          e.preventDefault();
+          this.login();
+        };
+        document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-US', {
+          weekday: 'long', month: 'long', day: 'numeric'
+        });
+        this.checkSession();
+      },
+      
+      async login() {
+        this.loading(true);
+        try {
+          const res = await fetch('/api/method/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              usr: document.getElementById('login-email').value,
+              pwd: document.getElementById('login-password').value
+            })
+          });
+          if (!res.ok) throw new Error('Login failed');
+          await this.checkSession();
+        } catch (e) {
+          this.toast('Login failed', 'error');
+        }
+        this.loading(false);
+      },
+      
+      async checkSession() {
+        try {
+          const emp = await this.api('checkin_extension.api.get_employee_info');
+          if (emp) {
+            this.employee = emp;
+            document.getElementById('greeting').textContent = `Hello, ${emp.employee_name}`;
+            this.showMain();
+            this.loadEntries();
+          }
+        } catch (e) {
+          document.getElementById('login-screen').style.display = 'flex';
+          document.getElementById('main-screen').style.display = 'none';
+        }
+      },
+      
+      async logout() {
+        await fetch('/api/method/logout', { method: 'POST' });
+        this.employee = null;
+        document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('main-screen').style.display = 'none';
+      },
+      
+      showMain() {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-screen').style.display = 'block';
+        document.getElementById('checkin-form').style.display = 'none';
+        this.stopCamera();
+        this.loadEntries();
+      },
+      
+      async showCheckinForm(logType) {
+        this.logType = logType;
+        document.getElementById('form-title').textContent = logType === 'IN' ? 'Check In' : 'Check Out';
+        document.getElementById('confirm-btn').textContent = logType === 'IN' ? '✓ Check In' : '✓ Check Out';
+        document.getElementById('confirm-btn').className = logType === 'IN' ? 'btn btn-success' : 'btn btn-danger';
+        
+        document.getElementById('main-screen').style.display = 'none';
+        document.getElementById('checkin-form').style.display = 'block';
+        
+        await this.loadProjects();
+        this.getLocation();
+        this.startCamera();
+        this.photo = null;
+        document.getElementById('camera-img').style.display = 'none';
+        document.getElementById('camera-video').style.display = 'block';
+        document.getElementById('capture-btn').style.display = 'inline-block';
+        document.getElementById('retake-btn').style.display = 'none';
+      },
+      
+      async loadProjects() {
+        try {
+          const projects = await this.api('checkin_extension.api.get_projects');
+          const sel = document.getElementById('project-select');
+          sel.innerHTML = '<option value="">-- Select Project --</option>' +
+            projects.map(p => `<option value="${p.name}">${p.project_name || p.name}</option>`).join('');
+        } catch (e) {
+          console.log(e);
+        }
+      },
+      
+      async loadEntries() {
+        try {
+          const entries = await this.api('checkin_extension.api.get_today_entries');
+          const el = document.getElementById('entries-list');
+          
+          if (!entries || !entries.length) {
+            el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><p>No entries yet today</p></div>';
+            return;
+          }
+          
+          el.innerHTML = entries.map(e => {
+            const time = new Date(e.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            const isOut = e.log_type === 'OUT';
+            let photoHtml = '';
+            if (e.checkin_photo) {
+              photoHtml = `<img src="${e.checkin_photo}" class="entry-photo">`;
+            }
+            let locationHtml = '';
+            if (e.gps_location) {
+              locationHtml = `<div class="entry-location"><a href="${e.gps_location}" target="_blank">📍 View Location</a></div>`;
+            }
+            return `
+              <div class="entry-card ${isOut ? 'checked-out' : ''}">
+                <div class="entry-header">
+                  <span class="entry-project">${e.project_name || e.project || 'No Project'}</span>
+                  <span class="entry-badge ${isOut ? 'out' : 'in'}">${e.log_type}</span>
+                </div>
+                <div class="entry-time">🕐 ${time}</div>
+                ${locationHtml}
+                ${photoHtml}
+              </div>
+            `;
+          }).join('');
+        } catch (e) {
+          console.log(e);
+        }
+      },
+      
+      async getLocation() {
+        const el = document.getElementById('location-value');
+        const box = document.getElementById('location-box');
+        el.textContent = 'Detecting...';
+        box.classList.remove('success');
+        
+        if (!navigator.geolocation) {
+          el.textContent = 'Not supported';
+          return;
+        }
+        
+        try {
+          const pos = await new Promise((res, rej) => 
+            navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 15000 })
+          );
+          this.location = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+          el.textContent = `${this.location.latitude.toFixed(5)}, ${this.location.longitude.toFixed(5)}`;
+          box.classList.add('success');
+        } catch (e) {
+          el.textContent = 'Location unavailable';
+          this.location = null;
+        }
+      },
+      
+      async startCamera() {
+        try {
+          if (this.stream) this.stopCamera();
+          this.stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: this.facingMode, width: 640, height: 480 }
+          });
+          document.getElementById('camera-video').srcObject = this.stream;
+        } catch (e) {
+          console.log('Camera error:', e);
+        }
+      },
+      
+      stopCamera() {
+        if (this.stream) {
+          this.stream.getTracks().forEach(t => t.stop());
+          this.stream = null;
+        }
+      },
+      
+      switchCamera() {
+        this.facingMode = this.facingMode === 'environment' ? 'user' : 'environment';
+        this.startCamera();
+      },
+      
+      capturePhoto() {
+        const video = document.getElementById('camera-video');
+        const img = document.getElementById('camera-img');
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        this.photo = canvas.toDataURL('image/jpeg', 0.7);
+        img.src = this.photo;
+        img.style.display = 'block';
+        video.style.display = 'none';
+        document.getElementById('capture-btn').style.display = 'none';
+        document.getElementById('switch-btn').style.display = 'none';
+        document.getElementById('retake-btn').style.display = 'inline-block';
+        this.stopCamera();
+      },
+      
+      retakePhoto() {
+        this.photo = null;
+        document.getElementById('camera-img').style.display = 'none';
+        document.getElementById('camera-video').style.display = 'block';
+        document.getElementById('capture-btn').style.display = 'inline-block';
+        document.getElementById('switch-btn').style.display = 'inline-block';
+        document.getElementById('retake-btn').style.display = 'none';
+        this.startCamera();
+      },
+      
+      async confirmCheckin() {
+        const project = document.getElementById('project-select').value;
+        if (!project) {
+          this.toast('Please select a project', 'error');
+          return;
+        }
+        
+        this.loading(true);
+        try {
+          await this.api('checkin_extension.api.create_checkin', {
+            log_type: this.logType,
+            project: project,
+            latitude: this.location?.latitude,
+            longitude: this.location?.longitude,
+            photo: this.photo
+          });
+          this.toast(this.logType === 'IN' ? 'Checked in!' : 'Checked out!', 'success');
+          this.showMain();
+        } catch (e) {
+          this.toast('Failed: ' + e.message, 'error');
+        }
+        this.loading(false);
+      },
+      
+      async api(method, args = {}) {
+        const res = await fetch('/api/method/' + method, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Frappe-CSRF-Token': this.getCookie('csrf_token') || ''
+          },
+          body: JSON.stringify(args)
+        });
+        const data = await res.json();
+        if (data.exc) throw new Error(data._server_messages || 'Error');
+        return data.message;
+      },
+      
+      getCookie(name) {
+        const v = '; ' + document.cookie;
+        const p = v.split('; ' + name + '=');
+        return p.length === 2 ? p.pop().split(';').shift() : null;
+      },
+      
+      toast(msg, type = '') {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.className = 'toast show ' + type;
+        setTimeout(() => el.classList.remove('show'), 3000);
+      },
+      
+      loading(show) {
+        document.getElementById('loading').classList.toggle('show', show);
+      }
+    };
+    
+    document.addEventListener('DOMContentLoaded', () => App.init());
+  </script>
+</body>
+</html>

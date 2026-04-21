@@ -1,0 +1,10 @@
+[project]
+name = "checkin_extension"
+version = "1.0.0"
+description = "Extends HRMS Employee Checkin with GPS, Photo and Project tracking"
+requires-python = ">=3.10"
+dependencies = ["frappe"]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"

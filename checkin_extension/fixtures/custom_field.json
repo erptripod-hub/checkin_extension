@@ -1,0 +1,74 @@
+[
+  {
+    "doctype": "Custom Field",
+    "dt": "Employee Checkin",
+    "module": "Checkin Extension",
+    "fieldname": "project",
+    "fieldtype": "Link",
+    "options": "Project",
+    "label": "Project",
+    "insert_after": "log_type",
+    "in_list_view": 1,
+    "in_standard_filter": 1
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Employee Checkin",
+    "module": "Checkin Extension",
+    "fieldname": "section_gps",
+    "fieldtype": "Section Break",
+    "label": "GPS & Photo",
+    "insert_after": "skip_auto_attendance",
+    "collapsible": 0
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Employee Checkin",
+    "module": "Checkin Extension",
+    "fieldname": "latitude",
+    "fieldtype": "Float",
+    "label": "Latitude",
+    "insert_after": "section_gps",
+    "precision": "8",
+    "read_only": 1
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Employee Checkin",
+    "module": "Checkin Extension",
+    "fieldname": "longitude",
+    "fieldtype": "Float",
+    "label": "Longitude",
+    "insert_after": "latitude",
+    "precision": "8",
+    "read_only": 1
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Employee Checkin",
+    "module": "Checkin Extension",
+    "fieldname": "gps_location",
+    "fieldtype": "Data",
+    "label": "GPS Location",
+    "insert_after": "longitude",
+    "read_only": 1,
+    "description": "Click to open in Google Maps"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Employee Checkin",
+    "module": "Checkin Extension",
+    "fieldname": "column_break_gps",
+    "fieldtype": "Column Break",
+    "insert_after": "gps_location"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Employee Checkin",
+    "module": "Checkin Extension",
+    "fieldname": "checkin_photo",
+    "fieldtype": "Attach Image",
+    "label": "Photo",
+    "insert_after": "column_break_gps"
+  }
+]
