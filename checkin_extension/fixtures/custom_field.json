@@ -1,5 +1,6 @@
 [
   {
+    "name": "Employee Checkin-project",
     "doctype": "Custom Field",
     "dt": "Employee Checkin",
     "module": "Checkin Extension",
@@ -12,6 +13,7 @@
     "in_standard_filter": 1
   },
   {
+    "name": "Employee Checkin-section_gps",
     "doctype": "Custom Field",
     "dt": "Employee Checkin",
     "module": "Checkin Extension",
@@ -22,6 +24,7 @@
     "collapsible": 0
   },
   {
+    "name": "Employee Checkin-latitude",
     "doctype": "Custom Field",
     "dt": "Employee Checkin",
     "module": "Checkin Extension",
@@ -33,6 +36,7 @@
     "read_only": 1
   },
   {
+    "name": "Employee Checkin-longitude",
     "doctype": "Custom Field",
     "dt": "Employee Checkin",
     "module": "Checkin Extension",
@@ -44,6 +48,7 @@
     "read_only": 1
   },
   {
+    "name": "Employee Checkin-gps_location",
     "doctype": "Custom Field",
     "dt": "Employee Checkin",
     "module": "Checkin Extension",
@@ -55,6 +60,7 @@
     "description": "Click to open in Google Maps"
   },
   {
+    "name": "Employee Checkin-column_break_gps",
     "doctype": "Custom Field",
     "dt": "Employee Checkin",
     "module": "Checkin Extension",
@@ -63,6 +69,7 @@
     "insert_after": "gps_location"
   },
   {
+    "name": "Employee Checkin-checkin_photo",
     "doctype": "Custom Field",
     "dt": "Employee Checkin",
     "module": "Checkin Extension",
