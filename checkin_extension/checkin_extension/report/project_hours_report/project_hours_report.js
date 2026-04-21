@@ -11,7 +11,7 @@ frappe.query_reports["Project Hours Report"] = {
             fieldname: "to_date",
             label: __("To Date"),
             fieldtype: "Date",
-            default: frappe.datetime.month_end(),
+            default: frappe.datetime.get_today(),
             reqd: 1
         },
         {
@@ -26,5 +26,14 @@ frappe.query_reports["Project Hours Report"] = {
             fieldtype: "Link",
             options: "Project"
         }
-    ]
+    ],
+    formatter: function(value, row, column, data, default_formatter) {
+        value = default_formatter(value, row, column, data);
+        
+        if (column.fieldname === "hours" && data.hours > 8) {
+            value = `<span style="color: green; font-weight: bold;">${data.hours}</span>`;
+        }
+        
+        return value;
+    }
 };
