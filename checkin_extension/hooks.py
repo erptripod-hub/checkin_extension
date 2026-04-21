@@ -21,7 +21,8 @@ doctype_js = {
     "Employee Checkin": "public/js/employee_checkin.js"
 }
 
-# Include JS on web pages (this injects into HRMS mobile)
+# Include JS everywhere (both desk and web)
+app_include_js = "/assets/checkin_extension/js/hrms_inject.js"
 web_include_js = "/assets/checkin_extension/js/hrms_inject.js"
 
 # Website Route Rules
